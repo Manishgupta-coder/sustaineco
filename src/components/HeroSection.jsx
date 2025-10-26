@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
@@ -100,21 +100,21 @@ const HeroSection = ({ currentSlide, setCurrentSlide }) => {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: currentSlide === index ? 1 : 0, y: currentSlide === index ? 0 : 50 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative z-10 text-center px-4 sm:px-6 lg:px-8 text-white max-w-4xl"
+              className="relative z-10 text-center px-4 sm:px-6 md:px-8 text-white max-w-3xl lg:max-w-4xl"
             >
               {/* Sparkle icon */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: currentSlide === index ? 1 : 0, rotate: currentSlide === index ? 0 : -180 }}
                 transition={{ duration: 0.8, delay: 0.5 }}
-                className="flex justify-center mb-6"
+                className="flex justify-center mb-4 md:mb-6"
               >
-                <Sparkles className="w-12 h-12 text-cyan-400 animate-pulse-glow" />
+                <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-cyan-400 animate-pulse-glow" />
               </motion.div>
 
               {/* Title */}
               <motion.h1 
-                className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 leading-tight"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: currentSlide === index ? 1 : 0 }}
                 transition={{ duration: 0.8, delay: 0.6 }}
@@ -136,7 +136,7 @@ const HeroSection = ({ currentSlide, setCurrentSlide }) => {
 
               {/* Description */}
               <motion.p 
-                className="text-xl md:text-2xl mb-8 text-gray-200"
+                className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 text-gray-200 px-2 md:px-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: currentSlide === index ? 1 : 0, y: currentSlide === index ? 0 : 20 }}
                 transition={{ duration: 0.8, delay: 1.2 }}
@@ -147,6 +147,19 @@ const HeroSection = ({ currentSlide, setCurrentSlide }) => {
           </div>
         ))}
       </motion.div>
+
+      {/* Slide indicators (dots) */}
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-20">
+        {heroSlides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrentSlide(i)}
+            className={`w-3 h-3 rounded-full transition-all ${
+              currentSlide === i ? 'bg-cyan-400 scale-110' : 'bg-gray-400/50 hover:bg-cyan-300/70'
+            }`}
+          />
+        ))}
+      </div>
     </section>
   );
 };
