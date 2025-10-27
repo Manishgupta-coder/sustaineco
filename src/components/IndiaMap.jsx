@@ -1,20 +1,28 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { geoMercator, geoPath } from 'd3-geo';
+import { supabase } from '../supabase/supabase';
 
 // Fallback: support various property keys for state name across datasets
 const getStateName = (props = {}) =>
   props.NAME_1 || props.state || props.st_nm || props.State_Name || props.STATE_NAME || props.NAME || props.name || '';
 
-const HIGHLIGHT_STATES = new Set(['Uttar Pradesh', 'Uttarakhand', 'Madhya Pradesh']);
-
 const LOCAL_URL = '/data/india-states.json';
 const CDN_URL = 'https://cdn.jsdelivr.net/gh/Subhash9325/GeoJson-Data-of-Indian-States/Indian_States.json';
 const GITHUB_URL = 'https://raw.githubusercontent.com/Subhash9325/GeoJson-Data-of-Indian-States/master/Indian_States.json';
 
-const IndiaMap = ({ className = '' }) => {
+const IndiaMap = ({ className = '', highlightedStates = [], statesData = [] }) => {
   const [features, setFeatures] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Build state code map from statesData prop
+  const stateCodeMap = useMemo(() => {
+    const mapping = {};
+    statesData.forEach(state => {
+      mapping[state.state_code] = state.state_name;
+    });
+    return mapping;
+  }, [statesData]);
 
   useEffect(() => {
     let active = true;
@@ -80,6 +88,19 @@ const IndiaMap = ({ className = '' }) => {
 
   const pathGen = useMemo(() => geoPath(projection), [projection]);
 
+  // Convert state codes to full names for highlighting
+  const highlightedStateNames = useMemo(() => {
+    const names = new Set(
+      highlightedStates.map(code => {
+        const name = stateCodeMap[code] || code;
+        // console.log(`Mapping state code '${code}' to '${name}'`);
+        return name;
+      })
+    );
+    // console.log('Highlighted state names:', Array.from(names));
+    return names;
+  }, [highlightedStates, stateCodeMap]);
+
   return (
     <div className={className}>
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
@@ -89,14 +110,18 @@ const IndiaMap = ({ className = '' }) => {
         <g>
           {features.map((f, idx) => {
             const name = getStateName(f.properties);
-            const highlighted = HIGHLIGHT_STATES.has(name);
+            const highlighted = highlightedStateNames.has(name);
+            if (highlighted) {
+              // console.log(`Highlighting state: ${name}`);
+            }
             return (
               <path
                 key={idx}
                 d={pathGen(f)}
-                fill={highlighted ? 'var(--brand-green-600)' : '#e6eff7'}
-                stroke={highlighted ? 'var(--brand-green-700)' : '#b5c7da'}
-                strokeWidth={highlighted ? 1.2 : 0.8}
+                fill={highlighted ? '#10b981' : '#e6eff7'}
+                stroke={highlighted ? '#059669' : '#b5c7da'}
+                strokeWidth={highlighted ? 1.5 : 0.8}
+                className="transition-all duration-200"
               >
                 <title>{name}</title>
               </path>
@@ -110,10 +135,6 @@ const IndiaMap = ({ className = '' }) => {
       {error && (
         <div className="text-sm text-red-600 mt-2">{error}. You can add a local copy at public/data/india-states.json to avoid network issues.</div>
       )}
-      <div className="mt-3 flex items-center gap-3 text-sm">
-        <span className="inline-block w-3 h-3 rounded-sm" style={{ background: 'var(--brand-green-600)' }}></span>
-        <span className="text-gray-600">Highlighted: Uttar Pradesh, Uttarakhand, Madhya Pradesh</span>
-      </div>
     </div>
   );
 };

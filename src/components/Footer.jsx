@@ -1,25 +1,38 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Linkedin, Mail, ArrowUp, Phone, MapPin } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../assets/images/logo.png';
 
 const Footer = ({ showBackToTop, scrollToTop }) => {
+  const navigate = useNavigate();
+
+  // Scroll to top after navigating
+  const handleNavigation = (path) => {
+    navigate(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       <footer className="bg-gradient-to-br from-slate-800 via-cyan-900 to-blue-900 text-white py-12 sm:py-14 md:py-16 border-t border-cyan-900/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Main Footer Content */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 md:gap-12 mb-10 sm:mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 md:gap-0">
+            
             {/* Brand Section */}
             <div className="text-center sm:text-left lg:col-span-1">
               <div className="flex items-center justify-center sm:justify-start mb-4">
-                <div className="shadow-lg">
-                  <img 
-                    src={Logo} 
-                    alt="SustainEco Systems & Services" 
-                    className="h-10 sm:h-12 md:h-14 w-auto object-contain"
+                <button
+                  onClick={() => handleNavigation('/')}
+                  className="shadow-lg bg-gradient-to-br from-white via-blue-100 to-cyan-200 rounded-xl p-2 transition-transform hover:scale-105"
+                >
+                  <img
+                    src={Logo}
+                    alt="SustainEco Systems & Services"
+                    className="h-10 sm:h-10 w-auto object-contain"
                   />
-                </div>
+                </button>
               </div>
               <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-4">
                 Leading the way in sustainable environmental solutions for a better tomorrow.
@@ -47,58 +60,43 @@ const Footer = ({ showBackToTop, scrollToTop }) => {
             </div>
 
             {/* Quick Links */}
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:text-center">
               <h4 className="font-bold mb-4 text-base sm:text-lg text-white">Quick Links</h4>
               <div className="space-y-2.5 text-gray-400 text-sm sm:text-base">
-                
-                <a href="#about" className="block hover:text-white hover:translate-x-1 transition-all">
+                <button
+                  onClick={() => handleNavigation('/about')}
+                  className="block w-full text-center hover:text-white hover:translate-x-1 transition-all"
+                >
                   About Us
-                </a>
-                <a href="#services" className="block hover:text-white hover:translate-x-1 transition-all">
+                </button>
+                <button
+                  onClick={() => handleNavigation('/services')}
+                  className="block w-full text-center hover:text-white hover:translate-x-1 transition-all"
+                >
                   Services
-                </a>
-                <a href="#projects" className="block hover:text-white hover:translate-x-1 transition-all">
+                </button>
+                <button
+                  onClick={() => handleNavigation('/projects')}
+                  className="block w-full text-center hover:text-white hover:translate-x-1 transition-all"
+                >
                   Projects
-                </a>
-               
-                <a href="#contact" className="block hover:text-white hover:translate-x-1 transition-all">
+                </button>
+                <button
+                  onClick={() => handleNavigation('/contact')}
+                  className="block w-full text-center hover:text-white hover:translate-x-1 transition-all"
+                >
                   Contact
-                </a>
-              </div>
-            </div>
-
-            {/* Services */}
-            <div className="text-center sm:text-left">
-              <h4 className="font-bold mb-4 text-base sm:text-lg text-white">Services</h4>
-              <div className="space-y-2.5 text-gray-400 text-sm sm:text-base">
-                <a href="#services" className="block hover:text-white hover:translate-x-1 transition-all">
-                  Waste Management
-                </a>
-                <a href="#services" className="block hover:text-white hover:translate-x-1 transition-all">
-                  Environmental Sustainability
-                </a>
-                <a href="#services" className="block hover:text-white hover:translate-x-1 transition-all">
-                  Social Development
-                </a>
-                <a href="#services" className="block hover:text-white hover:translate-x-1 transition-all">
-                  Natural Resource Management
-                </a>
-                <a href="#services" className="block hover:text-white hover:translate-x-1 transition-all">
-                  Climate Change
-                </a>
-                <a href="#services" className="block hover:text-white hover:translate-x-1 transition-all">
-                  GIS Mapping
-                </a>
+                </button>
               </div>
             </div>
 
             {/* Contact Info */}
             <div className="text-center sm:text-left">
               <h4 className="font-bold mb-4 text-base sm:text-lg text-white">Contact Us</h4>
-              <div className="space-y-3 text-gray-400 text-sm sm:text-base">
+              <div className="space-y-3 text-gray-400 text-sm sm:text-base max-w-md mx-auto sm:mx-0">
                 <div className="flex items-start gap-2 justify-center sm:justify-start">
-                  <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5 text-blue-500" />
-                  <p className="text-left sm:text-left">
+                  <MapPin className="w-5 h-5 flex-shrink-0 mt-1 text-blue-500" />
+                  <p>
                     123 Green Street<br />
                     Mumbai, Maharashtra 400001
                   </p>
@@ -109,11 +107,11 @@ const Footer = ({ showBackToTop, scrollToTop }) => {
                     +91 1234567890
                   </a>
                 </div>
-                <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <div className="flex items-center gap-2 break-all justify-center sm:justify-start">
                   <Mail className="w-5 h-5 flex-shrink-0 text-blue-500" />
-                  <a 
-                    href="mailto:contact@sustaineco.com" 
-                    className="hover:text-white transition-colors break-all"
+                  <a
+                    href="mailto:contact@sustaineco.com"
+                    className="hover:text-white transition-colors"
                   >
                     contact@sustaineco.com
                   </a>
@@ -123,7 +121,7 @@ const Footer = ({ showBackToTop, scrollToTop }) => {
           </div>
 
           {/* Bottom Bar */}
-          <div className="border-t border-gray-800 pt-6 sm:pt-8">
+          <div className="border-t border-gray-800 pt-6 sm:pt-6 mt-2">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-400 text-xs sm:text-sm">
               <p className="text-center sm:text-left">
                 &copy; 2025 SustainEco Systems & Services. All rights reserved.

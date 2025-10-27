@@ -1,75 +1,57 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Recycle, Leaf, Users, TreePine, Cloud, Map,CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { supabase } from '../supabase/supabase';
+
+const services = [
+  {
+    title: "Waste Management",
+    image: "https://images.unsplash.com/photo-1508873699372-7aeab60b44c9?auto=format&fit=crop&w=500&q=80", // Example URL
+  },
+  {
+    title: "Environmental Sustainability",
+    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=500&q=80",
+  },
+  {
+    title: "Social Development & Socio-Economic Studies",
+    image: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=500&q=80",
+  },
+  {
+    title: "Natural Resource Management",
+    image: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=500&q=80",
+  },
+  {
+    title: "Climate Change Mitigation & Adaptation",
+    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=500&q=80",
+  },
+  {
+    title: "GIS Mapping & Real-Time Data Dashboards",
+    image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=500&q=80",
+  },
+];
 
 const CoreServicesSection = () => {
-  const services = [
-    {
-      icon: Recycle,
-      title: "Waste Management",
-      points: [
-        "Comprehensive solutions for Solid, Plastic, Legacy, Biomedical, and E-waste Management.",
-        "Design and implementation of Integrated Waste Management Systems — including door-to-door collection, segregation, treatment, and scientific disposal.",
-        "Circular Economy interventions, EPR advisory, bioremediation, and landfill reclamation for sustainable urban systems."
-      ],
-      colorClass: "bg-brand-diag"
-    },
-    {
-      icon: Leaf,
-      title: "Environmental Sustainability",
-      points: [
-        "EIA, EMP, and Environmental Audits for industries, infrastructure, and development projects.",
-        "Sustainability and ESG Strategy, including SDG alignment, BRSR, and GRI reporting.",
-        "Resource efficiency, pollution prevention, and green certification support (LEED, GRIHA, ISO 14001)."
-      ],
-      colorClass: "bg-brand-diag-alt"
-    },
-    {
-      icon: Users,
-      title: "Social Development & Socio-Economic Studies",
-      points: [
-        "Socio-economic and baseline assessments for planning, policy, and project evaluation.",
-        "Awareness and behavior change campaigns for ULBs, industries, and communities.",
-        "Community engagement, inclusion of informal sector workers, and CSR-driven livelihood initiatives."
-      ],
-      colorClass: "bg-brand-diag"
-    },
-    {
-      icon: TreePine,
-      title: "Natural Resource Management",
-      points: [
-        "Afforestation, watershed management, and rainwater harvesting for ecological restoration.",
-        "Biodiversity conservation, land reclamation, and sustainable agriculture promotion.",
-        "Participatory resource governance and ecosystem valuation to enhance local resilience."
-      ],
-      colorClass: "bg-brand-diag-alt"
-    },
-    {
-      icon: Cloud,
-      title: "Climate Change Mitigation & Adaptation",
-      points: [
-        "Carbon footprinting, GHG inventories, and MRV systems for policy and project-level implementation.",
-        "Climate resilience and disaster risk reduction planning for governments and businesses.",
-        "Renewable energy advisory and development of Net Zero and low-carbon transition strategies."
-      ],
-      colorClass: "bg-brand-diag"
-    },
-    {
-      icon: Map,
-      title: "GIS Mapping & Real-Time Data Dashboards",
-      points: [
-        "Development of GIS-based mapping and visualization tools for environmental and social datasets.",
-        "Spatial planning and monitoring of waste, resource, and community infrastructure.",
-        "Real-time dashboards and decision-support systems for evidence-based management and reporting."
-      ],
-      colorClass: "bg-brand-diag-alt"
-    }
-  ];
-
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slidesPerView, setSlidesPerView] = useState(3);
+  const [servicesDetails, setServicesDetails] = useState([]);
+
+  useEffect(()=>{
+      const fetchServices = async()=>{
+        const {data, error} = await supabase
+        .from('services')
+        .select('*')
+        .order('id', { ascending: false })
+  
+        if(error){
+          console.error('Error',error);
+        }else{
+          setServicesDetails(data);          
+        }
+      }
+      fetchServices()
+    },[])
 
   useEffect(() => {
     const handleResize = () => {
@@ -89,11 +71,9 @@ const CoreServicesSection = () => {
 
   useEffect(() => {
     if (!isInView) return;
-
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
     }, 5000);
-
     return () => clearInterval(interval);
   }, [isInView, maxIndex]);
 
@@ -126,7 +106,6 @@ const CoreServicesSection = () => {
           >
             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" />
           </button>
-
           <button
             onClick={nextSlide}
             disabled={currentIndex >= maxIndex}
@@ -141,56 +120,44 @@ const CoreServicesSection = () => {
             <motion.div
               className="flex gap-6"
               animate={{
-                x: `calc(-${currentIndex * (100 / slidesPerView)}% - ${currentIndex * (24 / slidesPerView)}px)`,
+                x: `calc(-${currentIndex * (100 / slidesPerView)}% - ${
+                  currentIndex * (24 / slidesPerView)
+                }px)`,
               }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {services.map((service, idx) => {
-                const Icon = service.icon;
-                return (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                    style={{
-                      flex: `0 0 calc(${100 / slidesPerView}% - ${
-                        (slidesPerView - 1) * (24 / slidesPerView)
-                      }px)`,
-                      width: `calc(${100 / slidesPerView}% - ${
-                        (slidesPerView - 1) * (24 / slidesPerView)
-                      }px)`,
-                    }}
-                    className="shadow-sm hover:shadow-lg transition-all group"
-                  >
-                    <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden h-full">
-                      {/* Icon Header */}
-                      <div className={`${service.colorClass} p-6 sm:p-8`}>
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
-                          <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
-                        </div>
-                        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
-                          {service.title}
-                        </h3>
-                      </div>
-
-                      {/* Content - Bullet Points */}
-                      <div className="p-5 sm:p-6 md:p-8 bg-white">
-                        <ul className="space-y-2.5 sm:space-y-3">
-                          {service.points.map((point, pointIdx) => (
-                            <li key={pointIdx} className="flex items-start gap-2 sm:gap-2.5">
-                              <CheckCircle className="text-green-500 flex-shrink-0 mt-0.5 sm:mt-1" size={20} />
-                              <span className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-                                {point}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+              {servicesDetails.map((service, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  style={{
+                    flex: `0 0 calc(${100 / slidesPerView}% - ${
+                      (slidesPerView - 1) * (24 / slidesPerView)
+                    }px)`,
+                    width: `calc(${100 / slidesPerView}% - ${
+                      (slidesPerView - 1) * (24 / slidesPerView)
+                    }px)`,
+                  }}
+                  className="shadow-sm hover:shadow-lg transition-all group"
+                >
+                  <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden h-full flex flex-col">
+                    {/* Image */}
+                    <img
+                      src={service.image_url}
+                      alt={service.title}
+                      className="w-full h-44 sm:h-52 md:h-56 object-cover"
+                    />
+                    {/* Title below image */}
+                    <div className="flex-1 flex flex-col justify-center items-center p-6">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center mt-2">
+                        {service.title}
+                      </h3>
                     </div>
-                  </motion.div>
-                );
-              })}
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
           </div>
 

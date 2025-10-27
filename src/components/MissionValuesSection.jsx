@@ -1,13 +1,62 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Award, CheckCircle } from 'lucide-react';
 import FadeInSection from './FadeInSection';
+import { supabase } from '../supabase/supabase';
 
 const MissionValuesSection = () => {
+  const [missionContent, setMissionContent] = useState('');
+  const [valuesContent, setValuesContent] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMissionValues();
+  }, []);
+
+  const fetchMissionValues = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('mission_values')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+
+      // Separate mission and values
+      const mission = data.find(item => item.type === 'mission');
+      const values = data.filter(item => item.type === 'value');
+
+      setMissionContent(mission?.content || '');
+      setValuesContent(values.map(v => v.content));
+    } catch (err) {
+      console.error('Error fetching mission/values:', err);
+      // Fallback to default content
+      setMissionContent('To drive sustainable development through innovative environmental solutions, empowering communities and organizations to build resilient, eco-friendly futures. We believe in the power of data, technology, and strategic planning to create lasting positive impact on our planet.');
+      setValuesContent([
+        "Innovation in sustainability and environmental protection",
+        "Data-driven decision making for measurable impact",
+        "Community engagement and collaborative solutions",
+        "Commitment to transparency and accountability"
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const cardVariants = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0 }
   };
+
+  if (loading) {
+    return (
+      <section id="about" className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+          <div className="text-gray-400">Loading...</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="about" className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -34,10 +83,7 @@ const MissionValuesSection = () => {
                 Our Mission
               </h2>
               <p className="text-sm sm:text-base lg:text-lg text-gray-300 leading-relaxed">
-                To drive sustainable development through innovative environmental solutions, 
-                empowering communities and organizations to build resilient, eco-friendly futures. 
-                We believe in the power of data, technology, and strategic planning to create 
-                lasting positive impact on our planet.
+                {missionContent}
               </p>
             </motion.div>
           </FadeInSection>
@@ -63,12 +109,7 @@ const MissionValuesSection = () => {
                 Our Values
               </h2>
               <ul className="space-y-2.5 sm:space-y-3 text-sm sm:text-base lg:text-lg text-gray-300">
-                {[
-                  "Innovation in sustainability and environmental protection",
-                  "Data-driven decision making for measurable impact",
-                  "Community engagement and collaborative solutions",
-                  "Commitment to transparency and accountability"
-                ].map((value, index) => (
+                {valuesContent.map((value, index) => (
                   <motion.li 
                     key={index}
                     initial={{ opacity: 0, x: -20 }}

@@ -1,39 +1,40 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
+import { supabase } from "../supabase/supabase"; // adjust path as needed
 
-const HeroSection = ({ currentSlide, setCurrentSlide }) => {
-  const heroSlides = [
-    {
-      id: 1,
-      title: "Driving Sustainable Urban Futures",
-      description: "Transforming cities through innovative environmental solutions and strategic planning",
-      gradient_start: "#0f1729",
-      gradient_end: "#0891b2"
-    },
-    {
-      id: 2,
-      title: "Innovating for Environmental Resilience",
-      description: "Building climate-resilient communities with data-driven strategies",
-      gradient_start: "#0891b2",
-      gradient_end: "#3b82f6"
-    },
-    {
-      id: 3,
-      title: "Integrating Data with Sustainability",
-      description: "Leveraging technology for measurable environmental impact",
-      gradient_start: "#0a0e27",
-      gradient_end: "#06b6d4"
-    }
-  ];
+const HeroSection = () => {
+  const [slides, setSlides] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch slides from Supabase
+  useEffect(() => {
+    const fetchSlides = async () => {
+      const { data, error } = await supabase
+        .from("slides")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching slides:", error.message);
+      } else {
+        setSlides(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchSlides();
+  }, []);
 
   // Auto-slide effect
   useEffect(() => {
+    if (slides.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [heroSlides.length, setCurrentSlide]);
+  }, [slides]);
 
   // Floating particles animation
   const particles = Array.from({ length: 20 }, (_, i) => ({
@@ -42,32 +43,58 @@ const HeroSection = ({ currentSlide, setCurrentSlide }) => {
     y: Math.random() * 100,
     size: Math.random() * 4 + 2,
     duration: Math.random() * 10 + 10,
-    delay: Math.random() * 5
+    delay: Math.random() * 5,
   }));
 
+  if (loading) {
+    return (
+      <section className="min-h-screen flex items-center justify-center bg-black text-white text-lg">
+        Loading hero section...
+      </section>
+    );
+  }
+
+  if (slides.length === 0) {
+    return (
+      <section className="min-h-screen flex items-center justify-center bg-black text-white text-lg">
+        No slides available
+      </section>
+    );
+  }
+
   return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section
+      id="home"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+    >
       {/* Slider container */}
-      <motion.div 
+      <motion.div
         className="flex absolute inset-0"
-        style={{ width: `${heroSlides.length * 100}%` }}
-        animate={{ x: `-${currentSlide * (100 / heroSlides.length)}%` }}
-        transition={{ type: "spring", stiffness: 50, damping: 20, duration: 0.8 }}
+        style={{ width: `${slides.length * 100}%` }}
+        animate={{ x: `-${currentSlide * (100 / slides.length)}%` }}
+        transition={{
+          type: "spring",
+          stiffness: 50,
+          damping: 20,
+          duration: 0.8,
+        }}
       >
-        {heroSlides.map((slide, index) => (
+        {slides.map((slide, index) => (
           <div
             key={slide.id}
             className="h-screen flex items-center justify-center relative"
             style={{
-              width: `${100 / heroSlides.length}%`,
-              background: `linear-gradient(135deg, ${slide.gradient_start} 0%, ${slide.gradient_end} 100%)`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat'
+              width: `${100 / slides.length}%`,
+              backgroundImage: slide.image_url
+                ? `url(${slide.image_url})`
+                : "linear-gradient(135deg, #0073E6 0%, #2EB82E 100%)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
             }}
           >
-            {/* Overlay gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-cyan-950/80 to-blue-950/90"></div>
+            {/* Overlay gradient for text visibility */}
+            <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60"></div>
 
             {/* Floating particles */}
             <div className="absolute inset-0 overflow-hidden">
@@ -89,7 +116,7 @@ const HeroSection = ({ currentSlide, setCurrentSlide }) => {
                     duration: particle.duration,
                     repeat: Infinity,
                     delay: particle.delay,
-                    ease: "easeInOut"
+                    ease: "easeInOut",
                   }}
                 />
               ))}
@@ -98,14 +125,20 @@ const HeroSection = ({ currentSlide, setCurrentSlide }) => {
             {/* Content */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: currentSlide === index ? 1 : 0, y: currentSlide === index ? 0 : 50 }}
+              animate={{
+                opacity: currentSlide === index ? 1 : 0,
+                y: currentSlide === index ? 0 : 50,
+              }}
               transition={{ duration: 0.8, delay: 0.3 }}
               className="relative z-10 text-center px-4 sm:px-6 md:px-8 text-white max-w-3xl lg:max-w-4xl"
             >
               {/* Sparkle icon */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: currentSlide === index ? 1 : 0, rotate: currentSlide === index ? 0 : -180 }}
+                animate={{
+                  scale: currentSlide === index ? 1 : 0,
+                  rotate: currentSlide === index ? 0 : -180,
+                }}
                 transition={{ duration: 0.8, delay: 0.5 }}
                 className="flex justify-center mb-4 md:mb-6"
               >
@@ -113,32 +146,44 @@ const HeroSection = ({ currentSlide, setCurrentSlide }) => {
               </motion.div>
 
               {/* Title */}
-              <motion.h1 
+              <motion.h1
                 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 leading-tight"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: currentSlide === index ? 1 : 0 }}
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
-                {slide.title.split(' ').map((word, i) => (
+                {slide.title?.split(" ").map((word, i) => (
                   <motion.span
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: currentSlide === index ? 1 : 0, y: currentSlide === index ? 0 : 20 }}
-                    transition={{ duration: 0.5, delay: currentSlide === index ? 0.7 + i * 0.1 : 0 }}
-                    className={i >= slide.title.split(' ').length - 2 
-                      ? "inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400" 
-                      : "inline-block"}
+                    animate={{
+                      opacity: currentSlide === index ? 1 : 0,
+                      y: currentSlide === index ? 0 : 20,
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      delay: currentSlide === index ? 0.7 + i * 0.1 : 0,
+                    }}
+                    className={
+                      i >= slide.title.split(" ").length - 2
+                        ? "inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400"
+                        : "inline-block"
+                    }
                   >
-                    {word}{' '}
+                    {word}&nbsp;
                   </motion.span>
                 ))}
+
               </motion.h1>
 
               {/* Description */}
-              <motion.p 
+              <motion.p
                 className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 text-gray-200 px-2 md:px-0"
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: currentSlide === index ? 1 : 0, y: currentSlide === index ? 0 : 20 }}
+                animate={{
+                  opacity: currentSlide === index ? 1 : 0,
+                  y: currentSlide === index ? 0 : 20,
+                }}
                 transition={{ duration: 0.8, delay: 1.2 }}
               >
                 {slide.description}
@@ -147,19 +192,6 @@ const HeroSection = ({ currentSlide, setCurrentSlide }) => {
           </div>
         ))}
       </motion.div>
-
-      {/* Slide indicators (dots) */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-20">
-        {heroSlides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentSlide(i)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              currentSlide === i ? 'bg-cyan-400 scale-110' : 'bg-gray-400/50 hover:bg-cyan-300/70'
-            }`}
-          />
-        ))}
-      </div>
     </section>
   );
 };

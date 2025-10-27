@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 import { supabase } from '../supabase/supabase';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../assets/images/logo.png';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState('login'); // 'login' or 'forgot'
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,15 +19,12 @@ const AdminLogin = () => {
     setLoading(true);
     setError('');
     setSuccess('');
-
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
       if (authError) throw authError;
-
       setSuccess('Login successful! Redirecting...');
       setTimeout(() => navigate('/admin/dashboard'), 1500);
     } catch (err) {
@@ -42,14 +39,11 @@ const AdminLogin = () => {
     setLoading(true);
     setError('');
     setSuccess('');
-
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/admin/reset-password`,
       });
-
       if (resetError) throw resetError;
-
       setSuccess('Password reset email sent! Please check your inbox.');
       setEmail('');
     } catch (err) {
@@ -67,22 +61,12 @@ const AdminLogin = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Back to Home */}
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-gray-600 hover:text-blue-700 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Back to Home</span>
-        </button>
-
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10">
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <img src={Logo} alt="SustainEco" className="h-16 w-auto" />
           </div>
-
           {/* Title */}
           <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-2">
             {mode === 'login' ? 'Admin Login' : 'Reset Password'}
@@ -92,7 +76,6 @@ const AdminLogin = () => {
               ? 'Enter your credentials to access the admin panel'
               : 'Enter your email to receive a password reset link'}
           </p>
-
           {/* Error Message */}
           {error && (
             <motion.div
@@ -104,7 +87,6 @@ const AdminLogin = () => {
               <span>{error}</span>
             </motion.div>
           )}
-
           {/* Success Message */}
           {success && (
             <motion.div
@@ -116,7 +98,6 @@ const AdminLogin = () => {
               <span>{success}</span>
             </motion.div>
           )}
-
           {/* Form */}
           <form onSubmit={mode === 'login' ? handleLogin : handleForgotPassword}>
             {/* Email */}
@@ -125,7 +106,7 @@ const AdminLogin = () => {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-200" />
                 <input
                   id="email"
                   type="email"
@@ -133,11 +114,10 @@ const AdminLogin = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@sustaineco.com"
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 placeholder-gray-400"
                 />
               </div>
             </div>
-
             {/* Password (only in login mode) */}
             {mode === 'login' && (
               <div className="mb-6">
@@ -153,12 +133,11 @@ const AdminLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 placeholder-gray-400"
                   />
                 </div>
               </div>
             )}
-
             {/* Submit Button */}
             <motion.button
               whileHover={{ scale: 1.01 }}
@@ -170,7 +149,6 @@ const AdminLogin = () => {
               {loading ? 'Processing...' : mode === 'login' ? 'Login' : 'Send Reset Link'}
             </motion.button>
           </form>
-
           {/* Toggle Mode */}
           <div className="mt-6 text-center">
             {mode === 'login' ? (
@@ -198,11 +176,6 @@ const AdminLogin = () => {
             )}
           </div>
         </div>
-
-        {/* Footer Note */}
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Admin access only. Unauthorized access is prohibited.
-        </p>
       </motion.div>
     </div>
   );

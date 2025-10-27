@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react';
 import { supabase } from '../supabase/supabase';
 import Logo from '../assets/images/logo.png';
@@ -66,11 +67,17 @@ const AdminLayout = () => {
       isDropdown: true,
       subItems: [
         { path: '/admin/content/hero', label: 'Hero Section' },
+        { path: '/admin/content/about-us', label: 'About Us' },
+        { path: '/admin/content/mission-values', label: 'Mission & Values' },
+        { path: '/admin/content/impact-metrics', label: 'Impact Metrics' },
+        { path: '/admin/content/clients-partners', label: 'Clients & Partners' },
+        { path: '/admin/content/projects', label: 'Projects' },
         { path: '/admin/content/about', label: 'About Section' },
         { path: '/admin/content/services', label: 'Services' },
-        { path: '/admin/content/projects', label: 'Projects' },
+        {path: '/admin/content/AdminAdvisoryBoard', label:'AdminAdvisoryBoard'},
       ]
     },
+    { path: '/admin/contact-submissions', icon: MessageSquare, label: 'Contact Submissions' },
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },

@@ -1,151 +1,133 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { Recycle, ChevronLeft, ChevronRight } from 'lucide-react';
-import FadeInSection from './FadeInSection';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Briefcase } from 'lucide-react';
+import { supabase } from '../supabase/supabase';
 
 const ProjectsSection = () => {
-  const projects = [
-    {
-      title: "Urban Waste Management System",
-      desc: "Comprehensive waste segregation and recycling initiative across 50+ cities",
-      bgClass: "bg-brand-diag"
-    },
-    {
-      title: "Climate Action Framework",
-      desc: "Strategic planning for carbon neutrality in metropolitan regions",
-      bgClass: "bg-brand-diag-alt"
-    },
-    {
-      title: "Water Conservation Program",
-      desc: "Innovative solutions for sustainable water resource management",
-      bgClass: "bg-brand-deep"
-    }
-  ];
-
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [slidesPerView, setSlidesPerView] = useState(3);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) setSlidesPerView(1);
-      else if (window.innerWidth < 1024) setSlidesPerView(2);
-      else setSlidesPerView(3);
+    fetchProjects();
+
+    // Set up real-time subscription
+    const subscription = supabase
+      .channel('projects_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects'
+        },
+        (payload) => {
+          console.log('Projects changed:', payload);
+          fetchProjects();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
     };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const maxIndex = Math.max(0, projects.length - slidesPerView);
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
 
-  const nextSlide = () => setCurrentIndex((prev) => Math.min(prev + 1, maxIndex));
-  const prevSlide = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    if (!isInView) return; // Start auto-slide only when in view
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isInView, maxIndex]);
+  if (loading) {
+    return (
+      <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="text-gray-500">Loading projects...</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section id="projects" ref={ref} className="py-24 bg-gradient-to-b from-white via-emerald-50 to-indigo-50">
+    <section id="projects" className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-10 sm:mb-12 md:mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Our <span className="bg-gradient-to-r from-emerald-600 to-indigo-600 bg-clip-text text-transparent">Projects</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+            Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">Projects</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Transforming environmental challenges into sustainable opportunities
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            Transforming environmental challenges into sustainable solutions
           </p>
         </motion.div>
 
-        <div className="relative">
-          {/* Navigation Buttons */}
-          <button
-            onClick={prevSlide}
-            disabled={currentIndex === 0}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-emerald-50"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="w-6 h-6 text-emerald-600" />
-          </button>
-
-          <button
-            onClick={nextSlide}
-            disabled={currentIndex >= maxIndex}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-emerald-50"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="w-6 h-6 text-emerald-600" />
-          </button>
-
-          {/* Slider */}
-          <div className="overflow-hidden py-[20px]">
-            <motion.div
-              className="flex gap-8"
-              animate={{
-                x: `calc(-${currentIndex * (100 / slidesPerView)}% - ${currentIndex * (2 / slidesPerView)}rem)`,
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              {projects.map((project, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  style={{
-                    flex: `0 0 calc(${100 / slidesPerView}% - ${
-                      (slidesPerView - 1) * 2 / slidesPerView
-                    }rem)`,
-                    width: `calc(${100 / slidesPerView}% - ${
-                      (slidesPerView - 1) * 2 / slidesPerView
-                    }rem)`,
-                  }}
-                  whileHover={{ y: -10, scale: 1.02 }}
-                  className="bg-gradient-to-br from-emerald-50 to-indigo-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all hover-scale border-2 border-transparent hover:border-emerald-200"
-                >
-                  <div
-                    className={`w-full h-48 rounded-xl mb-4 flex items-center justify-center ${project.bgClass}`}
-                  >
-                    <Recycle className="w-20 h-20 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{project.title}</h3>
-                  <p className="text-gray-600 mb-4 leading-relaxed">
-                    {project.desc}
-                  </p>
-                </motion.div>
-              ))}
-            </motion.div>
+        {/* Projects Grid */}
+        {projects.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200">
+            <Briefcase className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-500 text-sm sm:text-base">No projects added yet. Add them from the admin panel.</p>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {projects.map((project, index) => (
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all overflow-hidden border border-gray-100 group"
+              >
+                {/* Project Image/Logo */}
+                <div className="relative h-48 sm:h-56 bg-white flex items-center justify-center overflow-hidden">
+                  {project.logo_url ? (
+                    <img
+                      src={project.logo_url}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="w-full h-full flex items-center justify-center bg-gray-50"
+                    style={{ display: project.logo_url ? 'none' : 'flex' }}
+                  >
+                    <Briefcase className="w-16 h-16 sm:w-20 sm:h-20 text-gray-300" />
+                  </div>
+                </div>
 
-          {/* Dots Indicator */}
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`h-2 rounded-full transition-all ${
-                  idx === currentIndex
-                    ? "w-8 bg-gradient-to-r from-emerald-600 to-indigo-600"
-                    : "w-2 bg-gray-300 hover:bg-emerald-400"
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
+                {/* Project Content */}
+                <div className="p-6 sm:p-8">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors">
+                    {project.title}
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                    {project.description}
+                  </p>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

@@ -15,8 +15,6 @@ const HeroManagement = () => {
     title: '',
     description: '',
     image_url: '',
-    gradient_start: '#0073E6',
-    gradient_end: '#2EB82E',
     order_index: 0,
   });
   const [imageFile, setImageFile] = useState(null);
@@ -30,8 +28,8 @@ const HeroManagement = () => {
   const fetchSlides = async () => {
     try {
       const { data, error } = await supabase
-        .from('hero_slides')
-        .select('*')
+        .from('slides')
+        .select('id, title, description, image_url, order_index')
         .order('order_index', { ascending: true });
 
       if (error) throw error;
@@ -76,14 +74,16 @@ const HeroManagement = () => {
       }
 
       const slideData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
         image_url: imageUrl,
+        order_index: formData.order_index,
       };
 
       if (editingSlide) {
         // Update existing slide
         const { error } = await supabase
-          .from('hero_slides')
+          .from('slides')
           .update(slideData)
           .eq('id', editingSlide.id);
 
@@ -92,7 +92,7 @@ const HeroManagement = () => {
       } else {
         // Create new slide
         const { error } = await supabase
-          .from('hero_slides')
+          .from('slides')
           .insert([slideData]);
 
         if (error) throw error;
@@ -113,7 +113,7 @@ const HeroManagement = () => {
 
     try {
       const { error } = await supabase
-        .from('hero_slides')
+        .from('slides')
         .delete()
         .eq('id', id);
 
@@ -131,8 +131,6 @@ const HeroManagement = () => {
       title: slide.title,
       description: slide.description,
       image_url: slide.image_url || '',
-      gradient_start: slide.gradient_start,
-      gradient_end: slide.gradient_end,
       order_index: slide.order_index,
     });
     setIsAddingNew(true);
@@ -142,11 +140,8 @@ const HeroManagement = () => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      // Create preview URL
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
+      reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
@@ -156,8 +151,6 @@ const HeroManagement = () => {
       title: '',
       description: '',
       image_url: '',
-      gradient_start: '#0073E6',
-      gradient_end: '#2EB82E',
       order_index: slides.length,
     });
     setImageFile(null);
@@ -244,7 +237,7 @@ const HeroManagement = () => {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   placeholder="Enter slide title"
                 />
               </div>
@@ -258,7 +251,7 @@ const HeroManagement = () => {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   required
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                  className="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
                   placeholder="Enter slide description"
                 />
               </div>
@@ -271,17 +264,17 @@ const HeroManagement = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
-                
-                {/* Preview of newly selected image */}
+
+                {/* Preview */}
                 {imagePreview && (
                   <div className="mt-3">
                     <p className="text-sm font-medium text-gray-700 mb-2">New Image Preview:</p>
                     <div className="relative">
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
                         className="h-48 w-full object-cover rounded-lg border-2 border-blue-500"
                       />
                       <button
@@ -298,47 +291,17 @@ const HeroManagement = () => {
                   </div>
                 )}
 
-                {/* Current image (when editing) */}
+                {/* Current image */}
                 {formData.image_url && !imagePreview && (
                   <div className="mt-3">
                     <p className="text-sm font-medium text-gray-700 mb-2">Current Image:</p>
-                    <img 
-                      src={formData.image_url} 
-                      alt="Current" 
+                    <img
+                      src={formData.image_url}
+                      alt="Current"
                       className="h-48 w-full object-cover rounded-lg border border-gray-300"
                     />
                   </div>
                 )}
-                
-                <p className="text-xs text-gray-500 mt-2">
-                  Upload a background image for this slide (optional - gradient will be used as fallback)
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Gradient Start Color
-                  </label>
-                  <input
-                    type="color"
-                    value={formData.gradient_start}
-                    onChange={(e) => setFormData({ ...formData, gradient_start: e.target.value })}
-                    className="w-full h-10 rounded-lg border border-gray-300 cursor-pointer"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Gradient End Color
-                  </label>
-                  <input
-                    type="color"
-                    value={formData.gradient_end}
-                    onChange={(e) => setFormData({ ...formData, gradient_end: e.target.value })}
-                    className="w-full h-10 rounded-lg border border-gray-300 cursor-pointer"
-                  />
-                </div>
               </div>
 
               <div>
@@ -350,7 +313,7 @@ const HeroManagement = () => {
                   value={formData.order_index}
                   onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) })}
                   min="0"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
               </div>
 
@@ -388,8 +351,8 @@ const HeroManagement = () => {
             <div className="flex items-start justify-between gap-4">
               {slide.image_url && (
                 <div className="w-48 h-32 flex-shrink-0">
-                  <img 
-                    src={slide.image_url} 
+                  <img
+                    src={slide.image_url}
                     alt={slide.title}
                     className="w-full h-full object-cover rounded-lg"
                   />
@@ -403,17 +366,6 @@ const HeroManagement = () => {
                   </span>
                 </div>
                 <p className="text-gray-600 mb-3">{slide.description}</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">
-                    {slide.image_url ? 'Fallback Gradient:' : 'Gradient:'}
-                  </span>
-                  <div
-                    className="w-24 h-6 rounded"
-                    style={{
-                      background: `linear-gradient(135deg, ${slide.gradient_start} 0%, ${slide.gradient_end} 100%)`,
-                    }}
-                  ></div>
-                </div>
               </div>
 
               <div className="flex gap-2">
