@@ -3,33 +3,6 @@ import { motion, useInView } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../supabase/supabase';
 
-const services = [
-  {
-    title: "Waste Management",
-    image: "https://images.unsplash.com/photo-1508873699372-7aeab60b44c9?auto=format&fit=crop&w=500&q=80", // Example URL
-  },
-  {
-    title: "Environmental Sustainability",
-    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=500&q=80",
-  },
-  {
-    title: "Social Development & Socio-Economic Studies",
-    image: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=500&q=80",
-  },
-  {
-    title: "Natural Resource Management",
-    image: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=500&q=80",
-  },
-  {
-    title: "Climate Change Mitigation & Adaptation",
-    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=500&q=80",
-  },
-  {
-    title: "GIS Mapping & Real-Time Data Dashboards",
-    image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=500&q=80",
-  },
-];
-
 const CoreServicesSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
@@ -37,22 +10,24 @@ const CoreServicesSection = () => {
   const [slidesPerView, setSlidesPerView] = useState(3);
   const [servicesDetails, setServicesDetails] = useState([]);
 
-  useEffect(()=>{
-      const fetchServices = async()=>{
-        const {data, error} = await supabase
+  // Fetch services from Supabase
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data, error } = await supabase
         .from('services')
         .select('*')
-        .order('id', { ascending: false })
-  
-        if(error){
-          console.error('Error',error);
-        }else{
-          setServicesDetails(data);          
-        }
-      }
-      fetchServices()
-    },[])
+        .order('id', { ascending: false });
 
+      if (error) {
+        console.error('Error fetching services:', error);
+      } else {
+        setServicesDetails(data || []);
+      }
+    };
+    fetchServices();
+  }, []);
+
+  // Responsive slide count
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) setSlidesPerView(1);
@@ -60,25 +35,37 @@ const CoreServicesSection = () => {
       else setSlidesPerView(3);
     };
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const maxIndex = Math.max(0, services.length - slidesPerView);
+  // ✅ Adjust max index based on available data
+  const maxIndex = Math.max(0, servicesDetails.length - slidesPerView);
+  const canSlide = servicesDetails.length > slidesPerView;
 
-  const nextSlide = () => setCurrentIndex((prev) => Math.min(prev + 1, maxIndex));
-  const prevSlide = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  const nextSlide = () => {
+    if (canSlide) setCurrentIndex((prev) => Math.min(prev + 1, maxIndex));
+  };
 
+  const prevSlide = () => {
+    if (canSlide) setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  // Auto slide (only if sliding is possible)
   useEffect(() => {
-    if (!isInView) return;
+    if (!isInView || !canSlide) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
     }, 5000);
     return () => clearInterval(interval);
-  }, [isInView, maxIndex]);
+  }, [isInView, maxIndex, canSlide]);
 
   return (
-    <section id="services" ref={ref} className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
+    <section
+      id="services"
+      ref={ref}
+      className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -100,16 +87,17 @@ const CoreServicesSection = () => {
           {/* Navigation Buttons */}
           <button
             onClick={prevSlide}
-            disabled={currentIndex === 0}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 sm:-translate-x-4 z-10 bg-white rounded-full p-2 sm:p-2.5 md:p-3 shadow-lg hover:shadow-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={!canSlide || currentIndex === 0}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 sm:-translate-x-4 z-10 bg-white rounded-full p-2 sm:p-2.5 md:p-3 shadow-lg hover:shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Previous service"
           >
             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" />
           </button>
+
           <button
             onClick={nextSlide}
-            disabled={currentIndex >= maxIndex}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 sm:translate-x-4 z-10 bg-white rounded-full p-2 sm:p-2.5 md:p-3 shadow-lg hover:shadow-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={!canSlide || currentIndex >= maxIndex}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 sm:translate-x-4 z-10 bg-white rounded-full p-2 sm:p-2.5 md:p-3 shadow-lg hover:shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Next service"
           >
             <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" />
@@ -120,11 +108,13 @@ const CoreServicesSection = () => {
             <motion.div
               className="flex gap-6"
               animate={{
-                x: `calc(-${currentIndex * (100 / slidesPerView)}% - ${
-                  currentIndex * (24 / slidesPerView)
-                }px)`,
+                x: canSlide
+                  ? `calc(-${currentIndex * (100 / slidesPerView)}% - ${
+                      currentIndex * (24 / slidesPerView)
+                    }px)`
+                  : 0,
               }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             >
               {servicesDetails.map((service, idx) => (
                 <motion.div
@@ -162,20 +152,22 @@ const CoreServicesSection = () => {
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-2 mt-6 sm:mt-8">
-            {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`h-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  idx === currentIndex
-                    ? "w-8 sm:w-10 bg-blue-700"
-                    : "w-2 bg-gray-300 hover:bg-gray-400"
-                }`}
-                aria-label={`Go to service ${idx + 1}`}
-              />
-            ))}
-          </div>
+          {canSlide && (
+            <div className="flex justify-center gap-2 mt-6 sm:mt-8">
+              {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`h-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    idx === currentIndex
+                      ? 'w-8 sm:w-10 bg-blue-700'
+                      : 'w-2 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Go to service ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
