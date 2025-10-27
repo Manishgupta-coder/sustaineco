@@ -24,12 +24,18 @@ const Header = ({ scrolled, isMenuOpen, setIsMenuOpen }) => {
       : 'text-white hover:text-cyan-400';
   };
 
+  // Always show background on /services, otherwise scroll-based
+  const showSolidBackground =
+    scrolled ||
+    location.pathname === '/services' ||
+    location.pathname === '/projects';
+
   return (
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
+        showSolidBackground
           ? 'bg-slate-950/95 backdrop-blur-md shadow-lg shadow-cyan-500/10'
           : 'bg-transparent'
       }`}
